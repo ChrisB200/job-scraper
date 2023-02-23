@@ -86,6 +86,9 @@ def parse_asda():
             job_listings_dict["Latitude"] = f"{long_lat[0]}"
             job_listings_dict["Longitude"] = f"{long_lat[1]}"
 
+            ref = map_page.find("p", {"class": "p-jobref"})
+            job_listings_dict["Id"] = ref.find("span").text
+
             for i in range(0, len(job_listings_labels)):
                 if job_listings_labels[i].text.lower() not in ["category", "shift pattern", "closing date"]:
                     job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text
