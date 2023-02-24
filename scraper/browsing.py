@@ -4,9 +4,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException, StaleElementReferenceException
 from bs4 import BeautifulSoup
-import time, json
+from logger import Logger
+import time
+import json
 import pgeocode
 
+logger = Logger("info")
+
+# Appends new content to old content
 def update_json(filename, content):
     try:
         with open(filename, "r") as file:
@@ -16,12 +21,11 @@ def update_json(filename, content):
 
     for item in content:
         old_content.append(item)
-        print(item)
 
     with open(filename, "w") as file:
         json.dump(old_content, file) 
 
-# "If the shifts for this role cover hours between midnight and 5am, you will need to be at least 18 years of age."
+# Checks if content of a tag is present
 def check_presence(html, tag, messages):
     check = False
     for item in html.find_all(tag):
@@ -31,22 +35,17 @@ def check_presence(html, tag, messages):
                 break
     return check
 
+# Returns the soup of a page
 def return_soup(driver):
     innerHTML = driver.execute_script("return document.body.innerHTML")
     soup = BeautifulSoup(innerHTML, "lxml")
     return soup
 
+# Returns latitude and longitude of postcode
 def return_long_lat(postcode):
     country = pgeocode.Nominatim('gb')
     details = country.query_postal_code(postcode)
     return [details.latitude, details.longitude]
-
-def wait_for_scroll(driver, locator, timeout=5):
-    try:
-        WebDriverWait(driver, timeout).until(lambda d: locator.location['y'] <= d.execute_script("return window.pageYOffset"))
-    except TimeoutException:
-        pass
-
 
 # Driver setup 
 def create_driver():
@@ -58,6 +57,7 @@ def create_driver():
     options.add_argument("start-maximised")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--log-level=3")
 
     driver = webdriver.Chrome(options=options)
     return driver
@@ -73,20 +73,16 @@ def check_error(func):
     return wrapper
 
 # Loads a page and returns the html content of the page
-@check_error
-def load_page(driver, url, element, timeout=10):
+def load_page(driver, url, element, timeout=15):
     try:
-        driver.get(url)
-        element_locator = (element[0], element[1])
-        WebDriverWait(driver, timeout).until(EC.presence_of_element_located(element_locator))
+        driver.get(url) 
+        wait_until(driver, "presence", element, timeout)
+        return return_soup(driver)
     except TimeoutException:
-        return -1, "Timeout while trying to locate the element"
+        logger.exception("Timeout while searching for element")
     except NoSuchElementException:
-        return -1, f"Element with locator '{element[0]}' and locatorName '{element[1]}' not found on the page"
-    finally:
-        innerHTML = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(innerHTML, "lxml")
-        return 0, soup
+        logger.exception(f"Element with locator '{element[0]}' and locatorName '{element[1]}' not found on the page")
+        
 
 def test_wait(driver, condition, element, timeout=15):
     while True:

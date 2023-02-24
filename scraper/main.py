@@ -1,4 +1,6 @@
 import threading, pymysql, json
+import logging
+logging.basicConfig(level=logging.WARNING)
 
 # TODO: Need to add more error handling so the program doesn't crash.
 # TODO: Need to update variable names.
