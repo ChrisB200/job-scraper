@@ -51,8 +51,13 @@ def wait_for_scroll(driver, locator, timeout=5):
 # Driver setup 
 def create_driver():
     options = webdriver.ChromeOptions()
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36'
+    user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
     options.add_argument('user-agent={0}'.format(user_agent))
+    options.add_argument("--headless")
+    options.add_argument("--window-size=1920x1080")
+    options.add_argument("start-maximised")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=options)
     return driver

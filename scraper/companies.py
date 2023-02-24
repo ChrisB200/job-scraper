@@ -10,6 +10,7 @@ def parse_asda():
     # Loads main page and numbers
     main_page_identifier = [By.ID, "maincontainer"]
     main_page_html = load_page(driver, root_url, main_page_identifier)
+    print("loaded page")
     
     # Filter locators
     xfilt = {
@@ -21,15 +22,17 @@ def parse_asda():
         "Job Category": [By.XPATH, '//*[@id="posBrowser_Filter_pageBlock"]/div/div[3]/div[1]/div[1]/div/div[1]/div[1]']
     }
 
+    print("Clicking filters")
     # The order that the xPaths will be pressed
     filter_pattern = [xfilt["Store Roles"], xfilt["Job Category"], xfilt["Job Type"], xfilt["Store Assistant"], xfilt["Employment Type"], xfilt["Part Time"]]
     click_order(driver, filter_pattern)
-   
+    print("filters clicked")
     # Main page updated with filters
     soup = return_soup(driver)
     time.sleep(3)
     page_numbers = page_number(soup, "div", {"class": "pagingText"})
 
+    print("page numbers")
     # Scrolls through the pages and saves the links of each job posting
     links = []        
     for i in range(1, page_numbers[1]):
@@ -47,6 +50,7 @@ def parse_asda():
     
     # Gathers Job listing information from each link
     job_listings = []
+    print("getting listings")
     for i, link in enumerate(links):
         driver.execute_script(f'''window.open("{link}","_blank");''')
         driver.close()
