@@ -93,13 +93,11 @@ def parse_asda():
                 if job_listings_labels[i].text.lower() not in ["category", "shift pattern", "closing date"]:
                     job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text
                 
-            print(job_listings_dict) # ONLY FOR TESTING, REMOVE THIS 
             if job_listings_dict["Latitude"].lower() != "nan" and job_listings_dict["Longitude"].lower() != "nan":
                 job_listings.append(job_listings_dict)
 
         driver.switch_to.window(window_name=window_name)
 
-    with open("asda.json", "w") as asda:
-        json.dump(job_listings, asda) 
+    update_json("listings.json", job_listings)
 
 companies_list = [parse_asda]

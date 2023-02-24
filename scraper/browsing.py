@@ -4,8 +4,22 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException, StaleElementReferenceException
 from bs4 import BeautifulSoup
-import time
+import time, json
 import pgeocode
+
+def update_json(filename, content):
+    try:
+        with open(filename, "r") as file:
+            old_content = json.load(file)
+    except:
+        old_content = []
+
+    for item in content:
+        old_content.append(item)
+        print(item)
+
+    with open(filename, "w") as file:
+        json.dump(old_content, file) 
 
 # "If the shifts for this role cover hours between midnight and 5am, you will need to be at least 18 years of age."
 def check_presence(html, tag, messages):
