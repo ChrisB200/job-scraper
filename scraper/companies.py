@@ -1,7 +1,8 @@
-import time, json
+import time
+import json
+
 from browsing import *
 from logger import Logger
-
 
 # The method that will parse the ASDA website
 def parse_asda():
@@ -123,9 +124,7 @@ def parse_asda():
             # Chooses the labels that I want
             for i in range(0, len(job_listings_labels)):
                 if job_listings_labels[i].text.lower() == "salary":
-                    string = job_listings_labels[i].text.lower()
-                    numbers = "".join([char for char in string if char.isdigit() or char == "."])
-                    job_listings_dict[job_listings_labels[i].text] = numbers
+                    job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text.replace("\u00a3", "£")
                 elif job_listings_labels[i].text.lower() not in ["category", "shift pattern", "closing date"]:
                     job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text
             
@@ -140,6 +139,7 @@ def parse_asda():
 
     # Updates JSON
     logger.debug("Successfully gathered all data from links")
+    logger.debug("Putting links in JSON")
     update_json("listings.json", job_listings)
     logger.info("Successfully parsed: ASDA")
 
