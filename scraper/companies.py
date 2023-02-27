@@ -4,9 +4,11 @@ import json
 from browsing import *
 from logger import Logger
 
+LOGGER = "debug"
+
 # The method that will parse the ASDA website
 def parse_asda():
-    logger = Logger("debug")
+    logger = Logger(LOGGER)
     driver = create_driver()
     root_url = "https://www.asda.jobs/vacancy/find/results/"
     
@@ -49,7 +51,7 @@ def parse_asda():
 
     # Scrolls through the pages and saves the links of each job posting
     links = []        
-    for i in range(1, page_numbers[1]):
+    for i in range(1, page_numbers[1]+1):
         logger.debug(f"Asda current page number = {i}")
 
         # Get page results
@@ -124,7 +126,8 @@ def parse_asda():
             # Chooses the labels that I want
             for i in range(0, len(job_listings_labels)):
                 if job_listings_labels[i].text.lower() == "salary":
-                    job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text.replace("\u00a3", "£")
+                    temp = job_listings_values[i].text.replace("\u00a3", "£")
+                    job_listings_dict[job_listings_labels[i].text] = str(temp)
                 elif job_listings_labels[i].text.lower() not in ["category", "shift pattern", "closing date"]:
                     job_listings_dict[job_listings_labels[i].text] = job_listings_values[i].text
             
@@ -143,4 +146,62 @@ def parse_asda():
     update_json("listings.json", job_listings)
     logger.info("Successfully parsed: ASDA")
 
+def parse_five_guys():
+    logger = Logger(LOGGER)
+    driver = create_driver()
+    root_url = "https://jobs.fiveguys.co.uk/jobs/vacancy/find/results/"
+
+    # Loads main page and numbers
+    main_page_identifier = [By.ID, "content-main"]
+    load_page(driver, root_url, main_page_identifier)
+    time.sleep(0.5)
+
+    # Clicks cookies
+    click(driver, [By.ID, "onetrust-accept-btn-handler"])
+
+    # The order that the xPaths will be pressed
+    click(driver, [By.PARTIAL_LINK_TEXT, "Crew Member"])
+    logger.debug("Five Guys filter clicked")
+    time.sleep(1)
+
+    # Main page updated with filters
+    main_page = return_soup(driver)
+    
+
+    # Gets page numbers
+    page_numbers = page_number(main_page, "div", {"class": "pagingText"})
+    print(page_numbers)
+    # Scrolls through the pages and saves the links of each job posting
+    links = []        
+    for i in range(1, page_numbers[1]+1):
+        logger.debug(f"Five Guys current page number = {i}")
+
+        # Get page results
+        next_page = driver.find_element(By.XPATH, '//*[@id="form_posBrowser_ResultsGrid"]/div/div[1]/div[4]/div[2]/a[2]')
+        page = return_soup(driver)
+        
+        # Gets all links on page
+        page_links = page.find_all("div", {"class": "rowLabel"})
+        for link in page_links:
+            temp = link.find("a")
+            
+            href = temp["href"]
+            links.append(f"https://jobs.fiveguys.co.uk{href}")
+
+        # Goes onto next page 
+        next_page.click()
+        time.sleep(1)
+
+    # Gathers Job listing information from each link
+    job_listings = []
+    logger.debug("Finished collecting links off page")
+    logger.debug("About to scrape all links")
+    for i, link in enumerate(links):
+        # Window Handling
+        driver.execute_script(f'''window.open("{link}","_blank");''')
+        driver.close()
+        window_name = driver.window_handles[-1]
+        driver.switch_to.window(window_name=window_name)
+
+#parse_five_guys()
 companies_list = [parse_asda]
